@@ -196,3 +196,21 @@ textarea{width:100%; resize:vertical}
   .g2,.g3{grid-template-columns:1fr}
   .fc-btns{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ===== Экзамен ВШБ (s2) ===== */
+.nav-group{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);padding:10px 12px 4px;font-weight:700}
+.heat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.heat-cell{aspect-ratio:1.6;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.06);transition:transform .1s}
+.heat-cell:hover{transform:scale(1.06)}
+.heat-cell .ht-n{font-size:13px;font-weight:800;color:#fff}
+.heat-cell .ht-acc{font-size:10.5px;color:rgba(255,255,255,.85)}
+.heat-legend span{font-weight:900}
+.opt-check{position:relative;padding-left:42px}
+.opt-check::before{content:"";position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:5px;border:2px solid var(--tx3);background:var(--bg2)}
+.opt-check.checked::before{background:var(--acc);border-color:var(--acc)}
+.opt-check.checked::after{content:"✓";position:absolute;left:18px;top:50%;transform:translateY(-50%);color:#fff;font-size:12px;font-weight:900}
+.opt-check.sel-ok::before{background:var(--acc2);border-color:var(--acc2)}
+.opt-check.sel-no::before{background:var(--bad);border-color:var(--bad)}
+.check-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:13.5px;cursor:pointer;border-bottom:1px solid var(--line)}
+.check-row input{margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:var(--acc)}
+@media (max-width:880px){.heat-grid{grid-template-columns:repeat(4,1fr)}}
