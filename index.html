@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>СТРАТЕГОС — боевая подготовка к экзамену</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⚔️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-mark">⚔️</div>
+      <div>
+        <div class="logo-title">СТРАТЕГОС</div>
+        <div class="logo-sub">стратегический менеджмент</div>
+      </div>
+    </div>
+    <nav id="nav">
+      <a href="#dashboard" data-view="dashboard"><span class="nav-ico">🏠</span> Штаб</a>
+      <a href="#learn" data-view="learn"><span class="nav-ico">📚</span> Учить</a>
+      <a href="#cards" data-view="cards"><span class="nav-ico">🃏</span> Карточки <span class="nav-badge" id="cards-due-badge"></span></a>
+      <a href="#quiz" data-view="quiz"><span class="nav-ico">🎯</span> Тест</a>
+      <a href="#maze" data-view="maze"><span class="nav-ico">🌀</span> Лабиринт</a>
+      <a href="#cases" data-view="cases"><span class="nav-ico">🧩</span> Кейсы</a>
+      <a href="#exam" data-view="exam"><span class="nav-ico">💀</span> Экзамен</a>
+      <a href="#tutor" data-view="tutor"><span class="nav-ico">🤖</span> AI-тренер</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div id="streak-box" class="streak-box"></div>
+      <div class="src-note">12 лекций курса · Кнатько Д.М. · 2026</div>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+<script src="js/data_concepts.js"></script>
+<script src="js/data_questions1.js"></script>
+<script src="js/data_questions2.js"></script>
+<script src="js/data_cards.js"></script>
+<script src="js/data_cases.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

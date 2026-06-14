@@ -1,0 +1,20 @@
+{
+  "name": "strategos",
+  "version": "1.0.0",
+  "description": "СТРАТЕГОС — боевая подготовка к экзамену по стратегическому менеджменту",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "python3 -m http.server 8742"
+  },
+  "keywords": ["strategy", "education", "exam-prep"],
+  "author": "vibecoding",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "compression": "^1.7.4"
+  }
+}
