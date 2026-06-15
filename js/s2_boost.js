@@ -32,6 +32,7 @@ function rateSRS(card, grade) {
     st.due = Date.now() + st.ivl * DAY;
   }
   st.reps++; S.s2.srs[card.id] = st; touchActivity("srs"); save();
+  if (window.gxp) gxp("card", true);
 }
 function weakestTopic() {
   let best = null, bestAcc = 2;
@@ -182,6 +183,17 @@ function renderOpen(cid) {
     ${st.ai ? `<div class="ai-box mt16"><div class="ai-head">🤖 Оценка ИИ</div><div class="ai-body">${fmt(st.ai).replace(/\n/g, "<br>")}</div></div>` : ""}
   </div>`;
 }
+/* что почитать/повторить по теме — из банка концепций */
+function readingFor(topic) {
+  const t = S2.themeById(topic); if (!t) return "";
+  return t.concepts.map(c => `${c.name} (${c.authors})`).join("; ");
+}
+/* ЖЁСТКАЯ оценка открытого ответа строгим экзаменатором */
+async function gradeOpenAnswer(q, answer, reading) {
+  const system = "Ты — ОЧЕНЬ СТРОГИЙ экзаменатор ВШБ НИУ ВШЭ по стратегическому менеджменту, известный жёсткими оценками. Ты придираешься к деталям и НЕ завышаешь баллы. Студент готовится к реальному экзамену, где спрос беспощадный, поэтому твоя задача — показать правду и заставить улучшить ответ, а не похвалить. Критерии (как на экзамене): (1) корректность применения концепций С ОБЯЗАТЕЛЬНЫМ указанием авторов; (2) логика и структура аргументации; (3) использование КОНКРЕТНЫХ фактов кейса; (4) отсутствие методологических ошибок и подмены концепций. Правила оценки: за каждый нераскрытый пункт рубрики и каждого неназванного автора снижай балл; общие слова без концепций и авторов = низкий балл; называние термина без объяснения механизма НЕ засчитывается полностью. Отвечай по-русски, предметно и без воды.";
+  const user = `КЕЙС: ${q.case}\nВОПРОС: ${q.stem}\n\nЭТАЛОННАЯ РУБРИКА (что ОБЯЗАНО прозвучать):\n${q.must.map((m, i) => (i + 1) + ". " + m).join("\n")}\n\nТИПИЧНЫЕ ОШИБКИ (штрафуй за них): ${q.errors.join("; ")}\n\nКЛЮЧЕВЫЕ КОНЦЕПЦИИ ТЕМЫ ДЛЯ ПОВТОРЕНИЯ: ${reading}\n\nОТВЕТ СТУДЕНТА:\n${answer}\n\nОцени СТРОГО и верни РОВНО в таком формате (markdown, жирным — заголовки):\n**Балл: X/12** (и одной фразой — какая это оценка по 10-балльной шкале и сдал бы или нет)\n**Что засчитано:** конкретные пункты рубрики и названные авторы.\n**Что пропущено/слабо:** каких концепций, авторов и фактов кейса не хватает — перечисли поimённо.\n**Методологические ошибки:** подмены концепций, неверная атрибуция, общие слова — если есть.\n**Как улучшить ответ:** 3–4 конкретных правки, чтобы поднять балл (что добавить, какого автора назвать, какой факт использовать).\n**Что дочитать/добить:** 2–3 конкретные концепции или сравнения из темы, которые нужно повторить.`;
+  return await callClaudeS2(system, user);
+}
 async function callClaudeS2(system, userText) {
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -247,12 +259,22 @@ window.App3 = {
     const st = openState[cid];
     const answer = st.fields.map((f, i) => `(${i + 1}) ${f || "[пусто]"}`).join("\n");
     if (!st.fields.some(f => f.trim())) { alert("Сначала заполни хотя бы пару пунктов конструктора."); return; }
-    st.aiLoading = true; st.ai = null; renderOpen(cid);
-    const system = "Ты — строгий, но доброжелательный экзаменатор ВШБ НИУ ВШЭ по стратегическому менеджменту. Оцениваешь ответ на открытый вопрос (12 баллов) по критериям курса: корректность применения концепций С УКАЗАНИЕМ АВТОРОВ, логика аргументации, использование фактов кейса, отсутствие методологических ошибок. Отвечай по-русски, кратко и предметно.";
-    const user = `КЕЙС: ${q.case}. ВОПРОС: ${q.stem}\n\nРУБРИКА (что должно прозвучать):\n${q.must.map((m, i) => (i + 1) + ". " + m).join("\n")}\n\nТИПИЧНЫЕ ОШИБКИ: ${q.errors.join("; ")}\n\nОТВЕТ СТУДЕНТА:\n${answer}\n\nДай оценку строго в формате:\n**Балл: X/12**\n**Засчитано:** какие пункты рубрики и авторы названы верно.\n**Пропущено:** каких концепций/авторов/фактов не хватает.\n**Ошибки:** методологические ошибки, если есть.\n**Как улучшить:** 1–3 конкретных совета.`;
-    try { st.ai = await callClaudeS2(system, user); touchActivity("ai"); }
+    st.aiLoading = true; st.ai = null; renderOpen(cid); if (window.earn) earn("ai_used");
+    const reading = readingFor(q.topic);
+    try { st.ai = await gradeOpenAnswer(q, answer, reading); touchActivity("ai"); if (window.gxp) gxp("ai", true); }
     catch (e) { st.ai = "⚠️ Ошибка: " + e.message; }
     st.aiLoading = false; renderOpen(cid);
+  },
+  async aiExam(qid) {
+    if (!S.tutor.key) { alert("Для AI-проверки вставь API-ключ Anthropic в разделе «AI-тренер»."); return; }
+    if (typeof ex2 === "undefined" || !ex2) return;
+    const q = ex2.list.find(x => x.id === qid);
+    const ans = (ex2.ans[qid] && ex2.ans[qid].text || "").trim();
+    if (!ans) { alert("В этом вопросе пустой ответ — нечего оценивать."); return; }
+    ex2.aiExam = ex2.aiExam || {}; ex2.aiExam[qid] = "loading"; renderSelfCheck(); if (window.earn) earn("ai_used");
+    try { ex2.aiExam[qid] = await gradeOpenAnswer(q, ans, readingFor(q.topic)); if (window.gxp) gxp("ai", true); }
+    catch (e) { ex2.aiExam[qid] = "⚠️ Ошибка: " + e.message; }
+    renderSelfCheck();
   }
 };
 

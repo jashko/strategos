@@ -21,6 +21,7 @@ function s2Record(qid, topic, part, ok) {
   if (ok) r.r++; else r.w++;
   r.lastOk = ok; r.topic = topic; r.part = part;
   S.s2.q[qid] = r; touchActivity("s2"); save();
+  if (window.gxp) gxp(qid.indexOf("trap-") === 0 ? "trap" : qid.indexOf("auth-") === 0 ? "auth" : "q", ok);
 }
 function themeStats(topic) {
   let r = 0, w = 0, seen = 0;
@@ -69,9 +70,28 @@ routes.examhub = () => {
       <span class="ht-n">${t.id}</span><span class="ht-acc">${st.n ? Math.round(st.acc*100)+"%" : "—"}</span></div>`;
   }).join("");
 
+  const L = (typeof levelInfo === "function") ? levelInfo() : null;
+  const quests = (typeof ensureQuests === "function") ? ensureQuests() : [];
+  const na = (typeof nextAction === "function") ? nextAction() : null;
+  const earned = (typeof BADGES !== "undefined") ? BADGES.filter(b => S.s2.badges && S.s2.badges[b.id]) : [];
   $("#main").innerHTML = `
   <h1 class="view-title">🎓 Экзамен ВШБ — тренажёр</h1>
   <div class="view-sub">Формат реального экзамена: 90 минут, 100 баллов, 4 части. Реальный экзамен ТЯЖЕЛЕЕ демо — тренируемся с запасом.</div>
+
+  ${L ? `<div class="card game-bar" style="margin-bottom:14px">
+    <div class="game-top">
+      <div class="xp-block"><div class="xp-lvl">⭐ Уровень ${L.lvl} · ${esc(L.title)}</div><div class="xp-track"><i style="width:${L.pct}%"></i></div><div class="tiny muted">${L.inLevel}/${L.need} XP до следующего уровня · всего ${L.xp} XP</div></div>
+      ${na ? `<div class="next-action"><div class="tiny muted">Не знаешь, с чего начать?</div><button class="btn" onclick="App4.go()">▶ ${esc(na.label)}</button><div class="tiny muted">${esc(na.why)}</div></div>` : ""}
+    </div>
+    <div class="quests">
+      ${quests.map(q => `<div class="quest ${q.done ? "done" : ""}" onclick="location.hash='${q.hash}'">
+        <span class="q-ic">${q.done ? "✅" : q.icon}</span>
+        <div style="flex:1"><div class="tiny" style="font-weight:600">${esc(q.label)}</div><div class="bar" style="margin-top:4px"><i style="width:${Math.min(100, Math.round(100 * q.prog / q.target))}%;background:${q.done ? "var(--acc2)" : "var(--acc)"}"></i></div></div>
+        <span class="tiny muted">${Math.min(q.prog, q.target)}/${q.target}${q.done ? "" : " ·+" + q.xp}</span>
+      </div>`).join("")}
+    </div>
+    ${earned.length ? `<div class="badges">${earned.map(b => `<span class="badge-chip" title="${esc(b.desc)}">${b.icon} ${esc(b.name)}</span>`).join("")}</div>` : `<div class="tiny muted" style="margin-top:8px">🏅 Бейджи появятся по мере прогресса (${BADGES.length} всего)</div>`}
+  </div>` : ""}
 
   <div class="grid g2">
     <div class="card">
@@ -104,6 +124,8 @@ routes.examhub = () => {
     <a href="#s2open"><div class="qi">✍️</div><div class="qt">Открытые вопросы (ч.4)</div><div class="qd">48% оценки · конструктор + эталон + проверка ИИ</div></a>
     <a href="#traps"><div class="qi">🎯</div><div class="qt">Trap-drills</div><div class="qd">различение путаемых концепций — ядро экзамена</div></a>
     <a href="#s2authors"><div class="qi">🏷</div><div class="qt">Атрибуция авторов</div><div class="qd">кто автор? / что за концепция?</div></a>
+    <a href="#s2cases"><div class="qi">🏢</div><div class="qt">Библиотека кейсов</div><div class="qd">реальные компании · «спросят любой»</div></a>
+    <a href="#sprint"><div class="qi">⚡</div><div class="qt">Фокус-спринт</div><div class="qd">5 минут · быстрые вопросы · под СДВГ</div></a>
     <a href="#s2practice"><div class="qi">🧠</div><div class="qt">Тренировка по темам</div><div class="qd">банк с разбором дистракторов</div></a>
     <a href="#s2concepts"><div class="qi">📖</div><div class="qt">Банк концепций</div><div class="qd">активное вспоминание · крючки памяти</div></a>
     <a href="#s2compare"><div class="qi">⚖️</div><div class="qt">Сравнения пар</div><div class="qd">X vs Y — как не перепутать</div></a>
@@ -431,7 +453,10 @@ function renderSelfCheck() {
           ${q.must.map((m, i) => `<label class="check-row"><input type="checkbox" ${checked.includes(i) ? "checked" : ""} onchange="App2.selfToggle('${q.id}',${i},${q.must.length})"> ${esc(m)}</label>`).join("")}
         </div>
         <div class="tiny mt8" style="color:var(--bad)"><b>Не допусти ошибок:</b> ${q.errors.join(" · ")}</div>
-        <div class="tiny mt8">Балл: <b id="self-${q.id}">${ex2.self[q.id] || 0}</b>/12</div>
+        <div class="tiny mt8">Самооценка: <b id="self-${q.id}">${ex2.self[q.id] || 0}</b>/12</div>
+        <div class="mt8"><button class="btn sm" onclick="App3.aiExam('${q.id}')" ${(ex2.aiExam && ex2.aiExam[q.id] === "loading") ? "disabled" : ""}>${(ex2.aiExam && ex2.aiExam[q.id] === "loading") ? "Проверяю…" : "🤖 Жёсткая AI-оценка"}</button></div>
+        ${(ex2.aiExam && ex2.aiExam[q.id] === "loading") ? `<div class="ai-box mt8"><span class="spin"></span> Строгий экзаменатор читает ответ…</div>` : ""}
+        ${(ex2.aiExam && ex2.aiExam[q.id] && ex2.aiExam[q.id] !== "loading") ? `<div class="ai-box mt8"><div class="ai-head">🤖 Оценка ИИ</div><div class="ai-body">${fmt(ex2.aiExam[q.id]).replace(/\n/g, "<br>")}</div></div>` : ""}
       </div>`;
     }).join("")}
     <button class="btn" onclick="App2.finishExam()">Показать итог →</button>
