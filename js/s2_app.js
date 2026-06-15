@@ -4,6 +4,9 @@
 
 const S2_LET5 = "АБВГД", S2_LET6 = "АБВГДЕ";
 const ALL2 = () => S2.DEMO.concat(S2.BANK);
+// мини-форматтер: **жирный** и *курсив* (после экранирования)
+const fmt = s => esc(s || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>");
+const revealed = {}; // состояние «раскрыто» для активного вспоминания
 
 /* ---- состояние ---- */
 function s2init() {
@@ -110,39 +113,78 @@ routes.s2concepts = (tid) => {
   $("#main").innerHTML = `
   <div class="back-link" onclick="location.hash='examhub'">← хаб экзамена</div>
   <h1 class="view-title">📖 Банк концепций</h1>
-  <div class="view-sub">12 тем программы. Каждая концепция: определение, авторы, «ловушка» (с чем путают) и мини-кейс.</div>
+  <div class="view-sub">Учим через активное вспоминание: сначала пробуешь вспомнить сам, потом проверяешь. По каждой концепции — суть, крючок для памяти, ловушка и пример.</div>
+  <div class="card" style="margin-bottom:14px;border-color:var(--teal);cursor:pointer" onclick="location.hash='s2compare'">
+    <b>⚖️ Сравнение путаемых пар</b>
+    <div class="tiny muted mt8">Таблицы «X vs Y» бок о бок (${S2.COMPARE.length} пар): чем отличаются и как не перепутать на экзамене.</div>
+  </div>
   <div class="mod-grid">
     ${S2.THEMES.map(t => `<div class="mod-card" onclick="location.hash='s2concepts/${t.id}'">
       <div class="stripe" style="background:var(--acc)"></div>
       <h3>${t.id}. ${esc(t.title)}</h3>
       <div class="sub">${esc(t.short)}</div>
-      <div class="meta"><span class="pill">${t.concepts.length} концепц.</span></div>
+      <div class="meta"><span class="pill">${t.concepts.length} концепц.</span>${S2.comparesByTopic(t.id).length ? `<span class="pill" style="color:var(--teal)">${S2.comparesByTopic(t.id).length} сравн.</span>` : ""}</div>
     </div>`).join("")}
   </div>`;
 };
 function s2ThemeDetail(tid) {
   const t = S2.themeById(tid); if (!t) { location.hash = "s2concepts"; return; }
+  const allOpen = t.concepts.every((_, i) => revealed[tid + "-" + i]);
   $("#main").innerHTML = `
   <div class="back-link" onclick="location.hash='s2concepts'">← все темы</div>
   <h1 class="view-title">${t.id}. ${esc(t.title)}</h1>
-  <div class="view-sub">${esc(t.short)}</div>
+  <div class="view-sub">${esc(t.short)} · <span class="tiny">сначала вспомни — потом раскрой</span></div>
   <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
     <button class="btn sm" onclick="App2.startPractice({topic:${t.id}})">🧠 Вопросы по теме</button>
-    <button class="btn sm ghost" onclick="App2.startTraps(${t.id})">🎯 Trap-drills темы</button>
+    <button class="btn sm ghost" onclick="App2.startTraps(${t.id})">🎯 Trap-drills</button>
+    ${S2.comparesByTopic(tid).length ? `<button class="btn sm ghost" onclick="location.hash='s2compare/${tid}'">⚖️ Сравнения (${S2.comparesByTopic(tid).length})</button>` : ""}
+    <button class="btn sm ghost" onclick="App2.revealAll(${tid},${allOpen ? "false" : "true"})">${allOpen ? "Скрыть всё" : "Раскрыть всё"}</button>
   </div>
-  ${t.concepts.map(c => `
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline">
-        <b style="font-size:16px">${esc(c.name)}</b>
-        <span class="pill">часть ${esc(c.part)}</span>
+  ${t.concepts.map((c, i) => {
+    const open = revealed[tid + "-" + i];
+    return `<div class="concept-card ${open ? "open" : ""}" id="cc2-${tid}-${i}">
+      <div class="cc-head" onclick="App2.reveal(${tid},${i})">
+        <div style="flex:1">
+          <div class="cc-name">${esc(c.name)}</div>
+          <div class="cc-auth">📖 ${esc(c.authors)}</div>
+        </div>
+        <span class="pill">ч. ${esc(c.part)}</span>
+        <span class="cc-toggle">${open ? "−" : "💭"}</span>
       </div>
-      <div class="author-line">📖 ${esc(c.authors)}</div>
-      <div class="lvl"><div class="lvl-tag">Определение</div><p>${esc(c.def)}</p></div>
-      <div class="lvl trap"><div class="lvl-tag">⚠️ Ловушка</div><p>${esc(c.trap)}</p></div>
-      ${c.confusable && c.confusable.length ? `<div class="tiny muted mt8">Путают с: ${c.confusable.map(x => `<span class="pill">${esc(x)}</span>`).join(" ")}</div>` : ""}
-      <div class="lvl ex"><div class="lvl-tag">Мини-кейс</div><p>${esc(c.mini)}</p></div>
-    </div>`).join("")}`;
+      ${open ? `
+        <div class="cc-body">
+          <div class="essence">${fmt(c.essence)}</div>
+          <div class="hook"><span class="hook-ic">🧲</span><div><b>Как запомнить:</b> ${fmt(c.hook)}</div></div>
+          <div class="block block-def"><div class="block-t">Определение</div><p>${fmt(c.def)}</p></div>
+          <div class="block block-trap"><div class="block-t">⚠️ Ловушка</div><p>${fmt(c.trap)}</p></div>
+          ${c.confusable && c.confusable.length ? `<div class="tiny muted" style="margin:10px 0">Путают с: ${c.confusable.map(x => `<span class="pill">${esc(x)}</span>`).join(" ")}</div>` : ""}
+          <div class="block block-ex"><div class="block-t">📌 Пример</div><p>${fmt(c.mini)}</p></div>
+        </div>`
+      : `<div class="cc-recall">Вспомни: <b>суть · крючок · ловушку · пример</b> — затем нажми, чтобы проверить</div>`}
+    </div>`;
+  }).join("")}`;
 }
+
+/* ===== СРАВНЕНИЯ ПУТАЕМЫХ ПАР ===== */
+routes.s2compare = (arg) => {
+  const topic = arg ? +arg : 0;
+  const list = topic ? S2.comparesByTopic(topic) : S2.COMPARE;
+  $("#main").innerHTML = `
+  <div class="back-link" onclick="location.hash='s2concepts'">← банк концепций</div>
+  <h1 class="view-title">⚖️ Сравнение путаемых пар</h1>
+  <div class="view-sub">${topic ? "Тема " + topic + ". " : ""}Главный навык экзамена — различить похожие концепции. Смотри различие построчно и запомни «как не перепутать».</div>
+  ${topic ? `<div class="tiny muted" style="margin-bottom:14px"><a onclick="location.hash='s2compare'" style="cursor:pointer">← показать все ${S2.COMPARE.length} пар</a></div>` : ""}
+  ${list.map(cmp => `
+    <div class="card cmp-card">
+      <table class="cmp-table">
+        <tr><th class="cmp-aspect"></th>
+          <th class="cmp-a">${esc(cmp.a)}<div class="cmp-auth">${esc(cmp.aA)}</div></th>
+          <th class="cmp-b">${esc(cmp.b)}<div class="cmp-auth">${esc(cmp.aB)}</div></th></tr>
+        ${cmp.rows.map(r => `<tr><td class="cmp-aspect">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("")}
+      </table>
+      <div class="cmp-rule"><b>🎯 Как не перепутать:</b> ${esc(cmp.rule)}</div>
+    </div>`).join("")}`;
+};
 
 /* ================= TRAP-DRILLS ================= */
 let trapSes = null;
@@ -473,7 +515,10 @@ window.App2 = {
       prSes = null;
     }
   },
-  quitPractice() { prSes = null; location.hash = "s2practice"; routes.s2practice(); }
+  quitPractice() { prSes = null; location.hash = "s2practice"; routes.s2practice(); },
+
+  reveal(tid, i) { const k = tid + "-" + i; revealed[k] = !revealed[k]; s2ThemeDetail(tid); const el = document.getElementById("cc2-" + tid + "-" + i); if (el) el.scrollIntoView({ block: "nearest" }); },
+  revealAll(tid, on) { const t = S2.themeById(tid); t.concepts.forEach((_, i) => revealed[tid + "-" + i] = on); s2ThemeDetail(tid); }
 };
 
 /* ---- инициализация: сделать хаб экзамена стартовой страницей ---- */
