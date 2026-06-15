@@ -92,10 +92,21 @@ routes.examhub = () => {
     </div>
   </div>
 
+  <div class="card mt16" style="border-color:var(--acc);cursor:pointer" onclick="location.hash='today'">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div><b>🗓 Сегодня</b> <span class="tiny muted">— дневная сессия по кривой забывания</span>
+        <div class="tiny muted mt8">К повторению: <b style="color:var(--bad)">${srsDue().length}</b> · новых: <b style="color:var(--acc)">${srsNew().length}</b></div></div>
+      <button class="btn sm" onclick="event.stopPropagation();location.hash='today'">Открыть план →</button>
+    </div>
+  </div>
+
   <div class="quick mt16">
+    <a href="#s2open"><div class="qi">✍️</div><div class="qt">Открытые вопросы (ч.4)</div><div class="qd">48% оценки · конструктор + эталон + проверка ИИ</div></a>
     <a href="#traps"><div class="qi">🎯</div><div class="qt">Trap-drills</div><div class="qd">различение путаемых концепций — ядро экзамена</div></a>
-    <a href="#s2practice"><div class="qi">🧠</div><div class="qt">Тренировка по темам</div><div class="qd">банк вопросов с фильтром и разбором дистракторов</div></a>
-    <a href="#s2concepts"><div class="qi">📖</div><div class="qt">Банк концепций</div><div class="qd">12 тем · авторы · ловушки</div></a>
+    <a href="#s2authors"><div class="qi">🏷</div><div class="qt">Атрибуция авторов</div><div class="qd">кто автор? / что за концепция?</div></a>
+    <a href="#s2practice"><div class="qi">🧠</div><div class="qt">Тренировка по темам</div><div class="qd">банк с разбором дистракторов</div></a>
+    <a href="#s2concepts"><div class="qi">📖</div><div class="qt">Банк концепций</div><div class="qd">активное вспоминание · крючки памяти</div></a>
+    <a href="#s2compare"><div class="qi">⚖️</div><div class="qt">Сравнения пар</div><div class="qd">X vs Y — как не перепутать</div></a>
   </div>
 
   ${weak.length ? `<div class="card mt16"><b>📌 Что повторить</b><div class="tiny muted mt8">Реально заваленные вопросы:</div>

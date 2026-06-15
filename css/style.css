@@ -259,3 +259,14 @@ textarea{width:100%; resize:vertical}
 .cmp-rule{padding:12px 14px;background:rgba(90,208,200,.1);font-size:13.5px;line-height:1.5}
 .cmp-rule b{color:var(--teal)}
 @media (max-width:600px){.cmp-table{font-size:12px}.cmp-table th,.cmp-table td{padding:7px 8px}.essence{font-size:16px}}
+
+/* ===== Бустеры: конструктор, AI-проверка ===== */
+.constructor-row{margin:14px 0;padding-left:12px;border-left:3px solid var(--acc)}
+.cr-label{font-size:13px;color:var(--tx2);margin-bottom:6px;line-height:1.45}
+.constructor-row textarea{width:100%}
+.model-line{margin-top:8px;background:rgba(90,208,200,.1);border:1px solid rgba(90,208,200,.3);border-radius:var(--r-sm);padding:9px 12px;font-size:13.5px;line-height:1.5}
+.model-line b{color:var(--teal)}
+.ai-box{background:rgba(108,140,255,.08);border:1px solid rgba(108,140,255,.35);border-radius:var(--r-sm);padding:14px 16px}
+.ai-head{font-weight:800;color:var(--acc);margin-bottom:8px}
+.ai-body{font-size:14px;line-height:1.6}
+.ai-body strong{color:var(--tx)}
