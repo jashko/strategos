@@ -14,7 +14,14 @@ function s2init() {
   if (!S.s2.q) S.s2.q = {};
   if (!S.s2.exams) S.s2.exams = [];
   if (!S.s2.traps) S.s2.traps = {};
+  if (!S.s2.studied) S.s2.studied = {};
 }
+/* «изучено» — для логики «сначала учим, потом тренируемся» */
+function isStudied(tid, i) { s2init(); return !!S.s2.studied[tid + "-" + i]; }
+function studiedCount() { s2init(); return Object.keys(S.s2.studied).length; }
+function themeStudied(tid) { const t = S2.themeById(tid); let n = 0; t.concepts.forEach((_, i) => { if (isStudied(tid, i)) n++; }); return n; }
+function markStudied(tid, i) { s2init(); const k = tid + "-" + i; if (!S.s2.studied[k]) { S.s2.studied[k] = todayStr(); if (window.gxp) gxp("study", true); else save(); } }
+function firstUnstudiedTheme() { return S2.THEMES.find(t => t.concepts.some((_, i) => !isStudied(t.id, i))); }
 function s2Record(qid, topic, part, ok) {
   s2init();
   const r = S.s2.q[qid] || { r: 0, w: 0, topic, part };
