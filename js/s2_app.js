@@ -29,6 +29,7 @@ function s2Record(qid, topic, part, ok) {
   r.lastOk = ok; r.topic = topic; r.part = part;
   S.s2.q[qid] = r; touchActivity("s2"); save();
   if (window.gxp) gxp(qid.indexOf("trap-") === 0 ? "trap" : qid.indexOf("auth-") === 0 ? "auth" : "q", ok);
+  if (window.trackDaily) trackDaily(ok);
 }
 function themeStats(topic) {
   let r = 0, w = 0, seen = 0;
@@ -130,11 +131,11 @@ routes.examhub = () => {
   <div class="quick mt16">
     <a href="#s2open"><div class="qi">✍️</div><div class="qt">Открытые вопросы (ч.4)</div><div class="qd">48% оценки · конструктор + эталон + проверка ИИ</div></a>
     <a href="#traps"><div class="qi">🎯</div><div class="qt">Trap-drills</div><div class="qd">различение путаемых концепций — ядро экзамена</div></a>
-    <a href="#s2authors"><div class="qi">🏷</div><div class="qt">Атрибуция авторов</div><div class="qd">кто автор? / что за концепция?</div></a>
-    <a href="#s2cases"><div class="qi">🏢</div><div class="qt">Библиотека кейсов</div><div class="qd">реальные компании · «спросят любой»</div></a>
-    <a href="#sprint"><div class="qi">⚡</div><div class="qt">Фокус-спринт</div><div class="qd">5 минут · быстрые вопросы · под СДВГ</div></a>
-    <a href="#s2practice"><div class="qi">🧠</div><div class="qt">Тренировка по темам</div><div class="qd">банк с разбором дистракторов</div></a>
-    <a href="#s2concepts"><div class="qi">📖</div><div class="qt">Банк концепций</div><div class="qd">активное вспоминание · крючки памяти</div></a>
+    <a href="#errors"><div class="qi">❌</div><div class="qt">Ошибки</div><div class="qd">повтори вопросы, на которые ошибся</div></a>
+    <a href="#favorites"><div class="qi">⭐</div><div class="qt">Избранное</div><div class="qd">сохранённые вопросы для повторения</div></a>
+    <a href="#analytics"><div class="qi">📊</div><div class="qt">Аналитика</div><div class="qd">динамика прогресса по дням</div></a>
+    <a href="#authors"><div class="qi">🏷</div><div class="qt">По авторам</div><div class="qd">статистика: где слабее с Портером / Минцбергом</div></a>
+    <a href="#compare2"><div class="qi">⚔️</div><div class="qt">Соревнование</div><div class="qd">сравни результаты с друзьями</div></a>
     <a href="#s2compare"><div class="qi">⚖️</div><div class="qt">Сравнения пар</div><div class="qd">X vs Y — как не перепутать</div></a>
   </div>
 
@@ -251,7 +252,7 @@ function renderTrap() {
       ${d.options.map((o, i) => {
         let cls = "opt";
         if (ans) { if (i === d.correct) cls += " sel-ok"; else if (i === ans.pick) cls += " sel-no"; }
-        return `<button class="${cls}" ${ans ? "disabled" : ""} onclick="App2.answerTrap(${i})">${esc(o)}</button>`;
+        return `<button class="${cls}" ${ans ? "disabled" : ""} onclick="App2.answerTrap(${i})"><span class="hotkey-hint">${i + 1}</span>${esc(o)}</button>`;
       }).join("")}
       ${ans ? `<div class="expl"><b>${ans.ok ? "✅ Точно!" : "❌ Точнее: " + esc(d.options[d.correct])}</b><br>${esc(d.why)}</div>
         <div class="q-foot"><span></span><button class="btn" onclick="App2.nextTrap()">${trapSes.idx + 1 < trapSes.list.length ? "Дальше →" : "Итог"}</button></div>` : ""}
@@ -285,7 +286,7 @@ function renderPractice() {
     body = q.options.map((o, i) => {
       let cls = "opt";
       if (ans) { if (i === q.correct) cls += " sel-ok"; else if (i === ans.pick) cls += " sel-no"; }
-      return `<button class="${cls}" ${ans ? "disabled" : ""} onclick="App2.answerPr(${i})">${S2_LET5[i]}. ${esc(o)}</button>`;
+      return `<button class="${cls}" ${ans ? "disabled" : ""} onclick="App2.answerPr(${i})"><span class="hotkey-hint">${i + 1}</span>${S2_LET5[i]}. ${esc(o)}</button>`;
     }).join("");
   } else if (q.part === 2) {
     const sel = prSes.sel || [];
@@ -293,7 +294,7 @@ function renderPractice() {
       let cls = "opt opt-check";
       if (ans) { if (q.correct.includes(i)) cls += " sel-ok"; else if (sel.includes(i)) cls += " sel-no"; }
       else if (sel.includes(i)) cls += " checked";
-      return `<button class="${cls}" ${ans ? "disabled" : ""} onclick="App2.togglePr(${i})">${S2_LET6[i]}. ${esc(o)}</button>`;
+      return `<button class="${cls}" ${ans ? "disabled" : ""} onclick="App2.togglePr(${i})"><span class="hotkey-hint">${i + 1}</span>${S2_LET6[i]}. ${esc(o)}</button>`;
     }).join("");
     if (!ans) body += `<button class="btn mt8" onclick="App2.submitPr()">Проверить</button>`;
   } else {
@@ -307,7 +308,7 @@ function renderPractice() {
     <div class="back-link" onclick="App2.quitPractice()">← выйти</div>
     <div class="q-progress">${prSes.list.map((_, i) => { const a = prSes.answers[i]; return `<i class="${i === prSes.idx ? "cur" : a ? (a.ok ? "ok" : "no") : ""}"></i>`; }).join("")}</div>
     <div class="q-card">
-      <div class="q-meta"><span class="pill" style="color:var(--acc)">тема ${q.topic}: ${esc(t ? t.short : "")}</span><span class="pill">часть ${q.part}</span><span class="pill">${"⭐".repeat(q.difficulty || 3)}</span></div>
+      <div class="q-meta"><span class="pill" style="color:var(--acc)">тема ${q.topic}: ${esc(t ? t.short : "")}</span><span class="pill">часть ${q.part}</span><span class="pill">${"⭐".repeat(q.difficulty || 3)}</span><button class="fav-star" onclick="App2.toggleFav('${q.id}')" title="В избранное">${isFavorite(q.id) ? '★' : '☆'}</button></div>
       <div class="q-text">${esc(q.stem)}</div>
       ${body}
       ${ans ? s2Explain(q, ans) : ""}
@@ -343,11 +344,11 @@ function renderExam2() {
   const a = ex2.ans[q.id];
   let body = "";
   if (q.part === 1) {
-    body = q.options.map((o, i) => `<button class="opt ${a === i ? "sel-ok" : ""}" onclick="App2.exPick(${i})">${S2_LET5[i]}. ${esc(o)}</button>`).join("");
+    body = q.options.map((o, i) => `<button class="opt ${a === i ? "sel-ok" : ""}" onclick="App2.exPick(${i})"><span class="hotkey-hint">${i + 1}</span>${S2_LET5[i]}. ${esc(o)}</button>`).join("");
   } else if (q.part === 2) {
     const sel = a || [];
     body = `<div class="tiny muted" style="margin-bottom:8px">Верных может быть несколько; количество не сообщается.</div>` +
-      q.options.map((o, i) => `<button class="opt opt-check ${sel.includes(i) ? "checked" : ""}" onclick="App2.exToggle(${i})">${S2_LET6[i]}. ${esc(o)}</button>`).join("");
+      q.options.map((o, i) => `<button class="opt opt-check ${sel.includes(i) ? "checked" : ""}" onclick="App2.exToggle(${i})"><span class="hotkey-hint">${i + 1}</span>${S2_LET6[i]}. ${esc(o)}</button>`).join("");
   } else if (q.part === 3) {
     body = `<input type="text" id="ex-fill" placeholder="Впишите понятие${q.needAuthor ? " и автора" : ""}…" value="${a ? esc(a) : ""}" oninput="App2.exFill(this.value)" style="width:100%">
       ${q.needAuthor ? `<div class="tiny muted mt8">Не забудьте автора.</div>` : ""}${q.needElement ? `<div class="tiny muted mt8">Укажите конкретный элемент модели.</div>` : ""}`;
@@ -561,7 +562,9 @@ window.App2 = {
   quitPractice() { prSes = null; location.hash = "s2practice"; routes.s2practice(); },
 
   reveal(tid, i) { const k = tid + "-" + i; revealed[k] = !revealed[k]; s2ThemeDetail(tid); const el = document.getElementById("cc2-" + tid + "-" + i); if (el) el.scrollIntoView({ block: "nearest" }); },
-  revealAll(tid, on) { const t = S2.themeById(tid); t.concepts.forEach((_, i) => revealed[tid + "-" + i] = on); s2ThemeDetail(tid); }
+  revealAll(tid, on) { const t = S2.themeById(tid); t.concepts.forEach((_, i) => revealed[tid + "-" + i] = on); s2ThemeDetail(tid); },
+
+  toggleFav(qid) { if (window.toggleFavorite) { toggleFavorite(qid); renderPractice(); } }
 };
 
 /* ---- инициализация: сделать хаб экзамена стартовой страницей ---- */

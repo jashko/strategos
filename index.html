@@ -33,6 +33,12 @@
       <a href="#s2practice" data-view="s2practice"><span class="nav-ico">🧠</span> Тренировка</a>
       <a href="#s2concepts" data-view="s2concepts"><span class="nav-ico">📖</span> Концепции</a>
       <a href="#s2compare" data-view="s2compare"><span class="nav-ico">⚖️</span> Сравнения</a>
+      <div class="nav-group">Инструменты</div>
+      <a href="#analytics" data-view="analytics"><span class="nav-ico">📊</span> Аналитика</a>
+      <a href="#favorites" data-view="favorites"><span class="nav-ico">⭐</span> Избранное</a>
+      <a href="#errors" data-view="errors"><span class="nav-ico">❌</span> Ошибки</a>
+      <a href="#authors" data-view="authors"><span class="nav-ico">🏷</span> По авторам</a>
+      <a href="#compare2" data-view="compare2"><span class="nav-ico">⚔️</span> Соревнование</a>
       <div class="nav-group">Дополнительно</div>
       <a href="#learn" data-view="learn"><span class="nav-ico">📚</span> Лекции</a>
       <a href="#cards" data-view="cards"><span class="nav-ico">🃏</span> Карточки <span class="nav-badge" id="cards-due-badge"></span></a>
@@ -41,32 +47,36 @@
     </nav>
     <div class="sidebar-foot">
       <div id="streak-box" class="streak-box"></div>
-      <div class="src-note">ВШБ НИУ ВШЭ · 90 мин · 100 баллов · 4 части</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="theme-toggle" class="btn sm ghost" onclick="toggleTheme()" style="flex:1">☀️</button>
+        <div class="src-note" style="flex:3">ВШБ НИУ ВШЭ · 90 мин · 100 баллов</div>
+      </div>
     </div>
   </aside>
   <main id="main"></main>
 </div>
 <!-- ?v= cache-busting: меняется при каждом релизе, чтобы браузер брал свежие файлы -->
-<script>window.__APP_VER="2026-06-15e";</script>
-<script src="js/data_concepts.js?v=2026-06-15e"></script>
-<script src="js/data_questions1.js?v=2026-06-15e"></script>
-<script src="js/data_questions2.js?v=2026-06-15e"></script>
-<script src="js/data_cards.js?v=2026-06-15e"></script>
-<script src="js/data_cases.js?v=2026-06-15e"></script>
-<script src="js/app.js?v=2026-06-15e"></script>
-<script src="js/s2_themes.js?v=2026-06-15e"></script>
-<script src="js/s2_compare.js?v=2026-06-15e"></script>
-<script src="js/s2_cases.js?v=2026-06-15e"></script>
-<script src="js/s2_demo.js?v=2026-06-15e"></script>
-<script src="js/s2_traps.js?v=2026-06-15e"></script>
-<script src="js/s2_bank.js?v=2026-06-15e"></script>
-<script src="js/s2_more_p1a.js?v=2026-06-15e"></script>
-<script src="js/s2_more_p1b.js?v=2026-06-15e"></script>
-<script src="js/s2_more_p2.js?v=2026-06-15e"></script>
-<script src="js/s2_more_p3.js?v=2026-06-15e"></script>
-<script src="js/s2_more_p4.js?v=2026-06-15e"></script>
-<script src="js/s2_app.js?v=2026-06-15e"></script>
-<script src="js/s2_boost.js?v=2026-06-15e"></script>
-<script src="js/s2_game.js?v=2026-06-15e"></script>
+<script>window.__APP_VER="2026-06-15f";</script>
+<script src="js/data_concepts.js?v=2026-06-15f"></script>
+<script src="js/data_questions1.js?v=2026-06-15f"></script>
+<script src="js/data_questions2.js?v=2026-06-15f"></script>
+<script src="js/data_cards.js?v=2026-06-15f"></script>
+<script src="js/data_cases.js?v=2026-06-15f"></script>
+<script src="js/app.js?v=2026-06-15f"></script>
+<script src="js/s2_themes.js?v=2026-06-15f"></script>
+<script src="js/s2_compare.js?v=2026-06-15f"></script>
+<script src="js/s2_cases.js?v=2026-06-15f"></script>
+<script src="js/s2_demo.js?v=2026-06-15f"></script>
+<script src="js/s2_traps.js?v=2026-06-15f"></script>
+<script src="js/s2_bank.js?v=2026-06-15f"></script>
+<script src="js/s2_more_p1a.js?v=2026-06-15f"></script>
+<script src="js/s2_more_p1b.js?v=2026-06-15f"></script>
+<script src="js/s2_more_p2.js?v=2026-06-15f"></script>
+<script src="js/s2_more_p3.js?v=2026-06-15f"></script>
+<script src="js/s2_more_p4.js?v=2026-06-15f"></script>
+<script src="js/s2_app.js?v=2026-06-15f"></script>
+<script src="js/s2_boost.js?v=2026-06-15f"></script>
+<script src="js/s2_game.js?v=2026-06-15f"></script>
+<script src="js/s2_features.js?v=2026-06-15f"></script>
 </body>
 </html>

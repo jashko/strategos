@@ -33,6 +33,7 @@ function recordAnswer(q, correct) {
   if (correct) a.r++; else a.w++;
   a.last = Date.now(); a.lastOk = correct;
   S.answers[q.id] = a; touchActivity("q"); save();
+  if (window.trackDaily) trackDaily(correct);
 }
 
 /* ---------- прогресс ---------- */
@@ -269,7 +270,7 @@ function renderSession() {
       ${q.o.map((opt, i) => {
         let cls = "opt";
         if (answered) { if (i === q.a) cls += answered.pick === i ? " sel-ok" : " reveal"; else if (i === answered.pick) cls += " sel-no"; }
-        return `<button class="${cls}" ${answered ? "disabled" : ""} onclick="App.answer(${i})">${"АБВГ"[i]}. ${esc(opt)}</button>`;
+        return `<button class="${cls}" ${answered ? "disabled" : ""} onclick="App.answer(${i})"><span class="hotkey-hint">${i + 1}</span>${"АБВГ"[i]}. ${esc(opt)}</button>`;
       }).join("")}
       ${answered ? `<div class="expl"><b>${answered.ok ? "✅ Верно!" : "❌ Неверно. Правильный ответ: " + "АБВГ"[q.a]}</b><br>${esc(q.e)}</div>` : ""}
       <div class="q-foot">
@@ -388,7 +389,7 @@ function renderExamQ() {
     </div>
     <div class="q-card">
       <div class="q-text">${esc(q.q)}</div>
-      ${q.o.map((opt, i) => `<button class="opt ${picked === i ? "sel-ok" : ""}" onclick="App.examPick(${i})">${"АБВГ"[i]}. ${esc(opt)}</button>`).join("")}
+      ${q.o.map((opt, i) => `<button class="opt ${picked === i ? "sel-ok" : ""}" onclick="App.examPick(${i})"><span class="hotkey-hint">${i + 1}</span>${"АБВГ"[i]}. ${esc(opt)}</button>`).join("")}
       <div class="q-foot">
         <button class="btn ghost sm" ${exam.idx === 0 ? "disabled" : ""} onclick="App.examGo(${exam.idx - 1})">← Назад</button>
         <button class="btn sm" ${exam.idx >= exam.list.length - 1 ? "disabled" : ""} onclick="App.examGo(${exam.idx + 1})">Вперёд →</button>
@@ -469,10 +470,11 @@ routes.cards = () => {
 function renderCard() {
   const c = fcSession.list[fcSession.idx];
   const m = modById(c.m);
+  if (window.startCardTimer && !fcSession.timerStarted) { startCardTimer(); fcSession.timerStarted = true; }
   $("#main").innerHTML = `
   <div class="fc-stage">
     <div class="back-link" onclick="App.quitCards()">← закончить</div>
-    <div class="fc-meta"><span>${fcSession.idx + 1} / ${fcSession.list.length}</span><span class="pill" style="color:${m.color}">${m.icon} ${esc(m.title)}</span></div>
+    <div class="fc-meta"><span>${fcSession.idx + 1} / ${fcSession.list.length}</span><span id="card-timer" class="tiny muted" style="font-variant-numeric:tabular-nums">0:00</span><span class="pill" style="color:${m.color}">${m.icon} ${esc(m.title)}</span></div>
     <div class="fc" onclick="App.flipCard()">
       <div class="front">${esc(c.f)}</div>
       ${fcSession.flipped ? `<div class="back">${esc(c.b)}</div>` : `<div class="tiny muted mt16">нажми, чтобы перевернуть</div>`}
@@ -643,8 +645,8 @@ window.App = {
   flipCard() { fcSession.flipped = !fcSession.flipped; renderCard(); },
   rate(g) {
     rateCard(fcSession.list[fcSession.idx], g);
-    if (g === 1) fcSession.list.push(fcSession.list[fcSession.idx]); // вернётся в конец сессии
-    if (fcSession.idx + 1 < fcSession.list.length) { fcSession.idx++; fcSession.flipped = false; renderCard(); }
+    if (g === 1) fcSession.list.push(fcSession.list[fcSession.idx]);
+    if (fcSession.idx + 1 < fcSession.list.length) { fcSession.idx++; fcSession.flipped = false; fcSession.timerStarted = false; renderCard(); }
     else { fcSession = null; navigate(); }
   },
   quitCards() { fcSession = null; navigate(); },
