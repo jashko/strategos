@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-dark-900 text-gray-100 font-sans antialiased;
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-dark-800; }
+  ::-webkit-scrollbar-thumb { @apply bg-dark-500 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-dark-400; }
+}
+
+@layer components {
+  .glass {
+    @apply bg-dark-800/60 backdrop-blur-sm border border-dark-600/50;
+  }
+  .glass-hover {
+    @apply hover:bg-dark-700/60 hover:border-dark-500/60 transition-all duration-200;
+  }
+  .phase-tag {
+    @apply text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded;
+  }
+  .concept-link {
+    @apply text-brand-blue underline underline-offset-2 decoration-dotted hover:decoration-solid cursor-pointer;
+  }
+  .prose-dark {
+    @apply text-gray-300 leading-relaxed;
+  }
+  .prose-dark p { @apply mb-3; }
+  .prose-dark strong { @apply text-white font-semibold; }
+  .prose-dark em { @apply text-gray-200 not-italic; }
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: fadeSlideIn 0.2s ease-out;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
